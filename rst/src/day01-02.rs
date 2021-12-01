@@ -4,7 +4,6 @@ use std::env;
 use std::io::BufRead;
 use std::io;
 
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     let filename = parse_config(&args);
@@ -13,26 +12,41 @@ fn main() {
         let result = dowork(lines);
         println!("{}", result)
     }
-
-
 }
 
 fn dowork(lines: io::Lines<io::BufReader<File>>) -> i32 {
-    let mut totalCount: i32 = 0;
-    let mut lastDepth: i32 = 0;
+    let mut total_count: i32 = 0;
+    let mut vec: Vec<i32> = Vec::new();
+    let mut previous_sum: i32 = 0;
+    
+
 
     for line in lines {
         if let Ok(str_depth) = line {
-            let depth = str_depth.parse::<i32>().unwrap();
-            if lastDepth == 0 {
-            } else if lastDepth < depth {
-                totalCount += 1;
+            if vec.len() == 3 {
+                vec.remove(0);
             }
-            lastDepth = depth
+
+            let depth = str_depth.parse::<i32>().unwrap();
+            vec.push(depth);
+            
+            if vec.len() == 3 {
+                let temp_sum = sumdepths(vec[0], vec[1], vec[2]);
+                
+                if previous_sum > 0 && previous_sum < temp_sum {
+                    total_count += 1
+                }
+
+                previous_sum = temp_sum
+            }
         }
     }
 
-    totalCount
+    total_count
+}
+
+fn sumdepths(a: i32, b:i32, c: i32) -> i32 {
+    a + b + c
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>> where P: AsRef<Path>, {
