@@ -19,8 +19,8 @@ const DOWN: &str = "down";
 const UP: &str = "up";
 
 fn dowork(lines: io::Lines<io::BufReader<File>>) -> i32 {
-    let mut horizontal_movement: i32 = 0;
-    let mut vertical_movement: i32 = 0;
+    let mut horizontal_position: i32 = 0;
+    let mut vertical_position: i32 = 0;
     let mut aim: i32 = 0;
 
 
@@ -31,9 +31,16 @@ fn dowork(lines: io::Lines<io::BufReader<File>>) -> i32 {
             let dir = instr.nth(0);
             let distance = instr.nth(0).unwrap().parse::<i32>().unwrap();
             match dir {
-                Some(FORWARD) => {horizontal_movement += distance,
-                Some(DOWN) => vertical_movement += distance,
-                Some(UP) => vertical_movement -= distance,
+                Some(FORWARD) => {
+                    horizontal_position += distance;
+                    vertical_position += distance * aim;
+                },
+                Some(DOWN) => {
+                    aim += distance;
+                },
+                Some(UP) => {
+                    aim -= distance;
+                },
                 Some(x) => println!("not supported {}", x),
                 None => println!("bad direction?")
             }
@@ -41,8 +48,8 @@ fn dowork(lines: io::Lines<io::BufReader<File>>) -> i32 {
         }
     }
     
-    println!("Horizontal: {} Vertical: {}", horizontal_movement, vertical_movement);
-    horizontal_movement * vertical_movement
+    println!("Horizontal: {} Vertical: {}", horizontal_position, vertical_position);
+    horizontal_position * vertical_position
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>> where P: AsRef<Path>, {
