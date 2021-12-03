@@ -14,44 +14,111 @@ fn main() {
     }
 }
 
-fn dowork(lines: io::Lines<io::BufReader<File>>) -> i64 {
-    let mut gamma_rate: i64 = 0 ; // Most common
-    let mut epsilon_rate: i64 = 0 ; // Least common
+fn find_rate(index: usize, mut rates: Vec<String>, mostcommon: bool) -> String {
+    let mut inner_ones: Vec<String> = Vec::new();
+    let mut inner_zeroes: Vec<String> = Vec::new();
+    let mut result: i32 = 0;
 
-    let mut result: [i32; 12] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-    for line in lines {
-        if let Ok(bits) = line {
-            // parse the line to a string and i32
-            
-            for (i, bit) in bits.chars().enumerate() {
-                match bit {
-                    '0' => result[i] -= 1,
-                    '1' => result[i] += 1,
-                    _x => println!("wouldn't know")
-                }
-            }
+    if rates.len() == 1 {
+        return rates.pop().unwrap();
+    }
+    
+    for bits in rates {
+        match bits.chars().nth(index).unwrap() {
+            '0' => {result -= 1; inner_zeroes.push(bits)},
+            '1' => {result += 1; inner_ones.push(bits)},
+            _x => println!("wouldn't know")
         }
     }
 
+    let newindex = index + 1;
+    if result >= 0 {
+        if mostcommon {
+            return find_rate(newindex, inner_ones, mostcommon);
+        } else {
+            return find_rate(newindex, inner_zeroes, mostcommon);
+        }
+    } else {
+        if mostcommon {
+            return find_rate(newindex, inner_zeroes, mostcommon);
+        } else {
+            return find_rate(newindex, inner_ones, mostcommon);
+        }
+    }
+}
 
-    let mut gamma = |x: i64| gamma_rate += x;
-    let mut epsi = |x: i64| epsilon_rate += x;
-    
-    if result[0] > 0 { gamma(2048)} else {epsi(2048)};
-    if result[1] > 0 { gamma(1024)} else {epsi(1024)};
-    if result[2] > 0 { gamma(512)} else {epsi(512)};
-    if result[3] > 0 { gamma(256)} else {epsi(256)};
-    if result[4] > 0 { gamma(128)} else {epsi(128)};
-    if result[5] > 0 { gamma(64)} else {epsi(64)};
-    if result[6] > 0 { gamma(32) } else {epsi(32)};
-    if result[7] > 0 { gamma(16)} else {epsi(16)};
-    if result[8] > 0 { gamma(8)} else { epsi(8)};
-    if result[9] > 0 { gamma(4)} else { epsi(4)};
-    if result[10] > 0 { gamma(2)} else { epsi(2)};
-    if result[11] > 0 { gamma(1)} else { epsi(1)};
+fn dowork(lines: io::Lines<io::BufReader<File>>) -> i64 {
+    let mut result: i64 = 0;
+    let carbon_rate: i64;
+    let carbon_rate_string: String;
+    let oxygen_rate: i64;
+    let oxygen_rate_string: String;
 
-    gamma_rate * epsilon_rate
+
+    let mut zeroes: Vec<String> = Vec::new();
+    let mut ones: Vec<String> = Vec::new();
+
+
+    for line in lines {
+        if let Ok(bits) = line {
+            match bits.chars().nth(0).unwrap() {
+                '0' => {
+                    result -= 1; 
+                    zeroes.push(bits);
+                },
+                '1' => {
+                    result += 1; 
+                    ones.push(bits);
+                },
+                _x => println!("wouldn't know")
+            }
+        }
+    }    
+  
+    if result >= 0 {
+        // re-run for loop with 0s and go forward one
+        carbon_rate_string = find_rate(1, zeroes, false);
+        oxygen_rate_string = find_rate(1, ones, true);
+    }  else {
+        carbon_rate_string = find_rate(1, ones, false);
+        oxygen_rate_string = find_rate(1, zeroes, true);
+    }
+
+    oxygen_rate = intfrombitstring(oxygen_rate_string);
+    carbon_rate = intfrombitstring(carbon_rate_string);
+
+    oxygen_rate * carbon_rate
+}
+
+fn intfrombitstring(bitstring: String) -> i64 {
+    let mut ret: i64 = 0;
+    let addfn = |i: usize| -> i64 {
+        match i {
+            0 => return 2048,
+            1=> return 1024,
+            2=> return 512,
+            3=> return 256,
+            4=> return 128,
+            5=> return 64,
+            6=> return 32,
+            7=> return 16,
+            8=> return 8,
+            9=> return 4,
+            10=> return 2,
+            11=> return 1,
+            _ => return 0
+        }
+    };
+
+    for (i, bit) in bitstring.chars().enumerate() {
+        match bit {
+            '0' => ret += 0,
+            '1' => ret += addfn(i),
+            _x  => println!("again, no idea")
+        }
+    }
+
+    return ret
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>> where P: AsRef<Path>, {
