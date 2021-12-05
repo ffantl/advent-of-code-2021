@@ -22,23 +22,36 @@ fn get_coord_tuple_from_str(coord_str: &str) -> (i32,i32) {
 }
 
 fn generate_coordinate_vec(start: (i32,i32), finish: (i32,i32)) -> Vec<(i32, i32)> {
+    println!("Input: {:?} {:?}", start, finish);
+
+    let find_dir = |start: i32, finish: i32| -> i32 {if finish - start >= 0 {1} else {-1}};
+    
     let mut coordinates_vec: Vec<(i32, i32)> = Vec::new();
-    if start.0 != finish.0 && start.1 != finish.1 {
-        return coordinates_vec
-    }
+    let dist = ((finish.0 - start.0).abs(), (finish.1 - start.1).abs());
+    let dir = ((find_dir(start.0, finish.0)), find_dir(start.1, finish.1));
 
     if start.0 - finish.0 == 0 { // x stays constant
-        let dist = (finish.1 - start.1).abs();
-        let dir = if finish.1 - start.1 >= 0 { 1 } else { -1 };
-        for y in 0..=dist {
-            coordinates_vec.push((start.0, start.1 + (y*dir)));
+        for y in 0..=dist.1 {
+            coordinates_vec.push((start.0, start.1 + (y*dir.1)));
         }
-    } else { // y stays constant
-        let dist = (finish.0 - start.0).abs();
-        let dir = if finish.0 - start.0 >= 0 { 1 } else { -1 };
-        for x in 0..=dist { // inclusive of end
-            coordinates_vec.push((start.0 + (x*dir), start.1));
+    } else if start.1 - finish.1 == 0 { // y stays constant
+        for x in 0..=dist.0 { // inclusive of end
+            coordinates_vec.push((start.0 + (x*dir.0), start.1));
         }
+    } else { // ANGLES
+        // must have a 45 degree angle.
+        let slope = (dist.1*dir.1) as f64/(dist.0*dir.0) as f64;
+        let b = ((start.0 as f64 * slope) - start.1 as f64) * -1 as f64;
+        if slope.abs() != 0.5 && slope.abs() != 1.0 {
+            println!("slope (rejected): {}", slope);
+            return coordinates_vec
+        }
+        println!("function y = {}x + {}", slope, b);
+
+        for x in 0..=dist.0 {
+            coordinates_vec.push((start.0 + (x * dir.0), ((slope * (start.0 + (x*dir.0)) as f64) + b) as i32));
+        }
+
     }
 
     coordinates_vec
@@ -59,7 +72,7 @@ fn dowork(lines: io::Lines<io::BufReader<File>>) -> i64 {
             let start = get_coord_tuple_from_str(coords.next().unwrap());
             let finish = get_coord_tuple_from_str(coords.next().unwrap());
             let coord_vec = generate_coordinate_vec(start, finish);
-            println!("{:?}", coord_vec);
+            println!("Output: {:?}\n", coord_vec);
             for coord in coord_vec {
                 let counter = map.entry(coord).or_insert(0);
                 *counter += 1;
