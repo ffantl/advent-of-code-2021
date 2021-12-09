@@ -15,6 +15,9 @@ fn main() {
     }
 }
 
+// find median
+// find average
+
 fn find_min_and_max_fuel(min: i64, max: i64, input: HashMap<i64,i64>) -> ((i64, i64), (i64, i64)) {
     let mut min_index: i64 = 0;
     let mut max_index: i64 = 0;
